@@ -4,6 +4,7 @@ include ../libxcrypt-common.mk
 PKG_NAME:=libxcrypt
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=1
+PKG_FORTIFY_SOURCE:=0
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk

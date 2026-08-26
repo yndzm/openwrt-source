@@ -24,27 +24,6 @@ buffalo_initial_setup()
 	ubiformat /dev/mtd$mtdnum -y
 }
 
-jiorouter_initial_setup()
-{
-	[ "$(rootfs_type)" = "tmpfs" ] || return 0
-
-	local mtdnum="$( find_mtd_index ubi )"
-	if [ ! "$mtdnum" ]; then
-		echo "unable to find mtd partition ubi"
-		return 1
-	fi
-
-	ubidetach -m "$mtdnum" 2>/dev/null
-	ubiformat /dev/mtd$mtdnum -y
-	ubiattach -m "$mtdnum"
-	ubimkvol /dev/ubi0 -n 0 -N u-boot-env -s 0x80000
-
-	# Set boot arguments in freshly created U-Boot environment
-	fw_setenv bootcmd 'ubi read 46000000 kernel;fdt addr $(fdtcontroladdr);fdt rm /signature;bootm 0x46000000'
-	fw_setenv bootdelay 0
-	fw_setenv ipaddr ''
-}
-
 xiaomi_initial_setup()
 {
 	# initialize UBI and setup uboot-env if it's running on initramfs
@@ -108,39 +87,34 @@ platform_do_upgrade() {
 	bananapi,bpi-r4-2g5|\
 	bananapi,bpi-r4-poe|\
 	bananapi,bpi-r4-lite|\
-	bazis,ax3000wm|\
+	cetron,ct3003-ubootmod|\
 	cmcc,a10-ubootmod|\
 	cmcc,rax3000m|\
+	cmcc,rax3000me|\
 	comfast,cf-wr632ax-ubootmod|\
-	creatlentem,clt-r30b1-ubi|\
 	cudy,tr3000-v1-ubootmod|\
-	cudy,wbr3000uax-v1-ubootmod|\
-	cudy,wr3000e-v1-ubootmod|\
-	cudy,wr3000s-v1-ubootmod|\
-	cudy,wr3000h-v1-ubootmod|\
-	cudy,wr3000p-v1-ubootmod|\
 	gatonetworks,gdsp|\
 	h3c,magic-nx30-pro|\
 	imou,hx21|\
 	jcg,q30-pro|\
 	jdcloud,re-cp-03|\
 	konka,komi-a31|\
+	livinet,zr-3020-ubootmod|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
 	mercusys,mr90x-v1-ubi|\
-	netis,eap930-v1|\
 	netis,nx30v2|\
 	netis,nx31|\
-	netis,nx32u|\
 	nokia,ea0326gmp|\
 	openwrt,one|\
 	netcore,n60|\
 	netcore,n60-pro|\
 	qihoo,360t7|\
-	qihoo,360t7-ubi|\
 	routerich,ax3000-ubootmod|\
-	routerich,be7200|\
 	snr,snr-cpe-ax2|\
+	tplink,tl-7dr7230-v1|\
+	tplink,tl-7dr7230-v2|\
+	tplink,tl-7dr7250-v1|\
 	tplink,tl-xdr4288|\
 	tplink,tl-xdr6086|\
 	tplink,tl-xdr6088|\
@@ -148,35 +122,33 @@ platform_do_upgrade() {
 	xiaomi,mi-router-ax3000t-ubootmod|\
 	xiaomi,redmi-router-ax6000-ubootmod|\
 	xiaomi,mi-router-wr30u-ubootmod|\
-	zyxel,ex5601-t0-ubootmod|\
-	zyxel,wx5600-t0-ubootmod)
+	zyxel,ex5601-t0-ubootmod)
 		fit_do_upgrade "$1"
 		;;
 	acer,predator-w6|\
 	acer,predator-w6d|\
 	acer,vero-w6m|\
-	airpi,ap3000m|\
 	arcadyan,mozart|\
 	glinet,gl-mt2500|\
-	glinet,gl-mt2500-airoha|\
 	glinet,gl-mt6000|\
 	glinet,gl-x3000|\
 	glinet,gl-xe3000|\
-	huasifei,wh3000|\
-	huasifei,wh3000-pro-emmc|\
+	huasifei,wh3000-emmc|\
+	huasifei,wh3000-pro|\
 	smartrg,sdg-8612|\
 	smartrg,sdg-8614|\
 	smartrg,sdg-8622|\
 	smartrg,sdg-8632|\
 	smartrg,sdg-8733|\
 	smartrg,sdg-8733a|\
+	cmcc,rax3000m-emmc|\
+	cmcc,xr30-emmc|\
 	smartrg,sdg-8734)
 		CI_KERNPART="kernel"
 		CI_ROOTPART="rootfs"
 		emmc_do_upgrade "$1"
 		;;
 	asus,rt-ax52|\
-	asus,rt-ax57m|\
 	asus,rt-ax59u|\
 	asus,tuf-ax4200|\
 	asus,tuf-ax4200q|\
@@ -188,10 +160,7 @@ platform_do_upgrade() {
 		;;
 	buffalo,wsr-6000ax8|\
 	cudy,wr3000h-v1|\
-	cudy,wr3000p-v1|\
-	huasifei,wh3000-pro-nand|\
-	huasifei,wh3000r-nand|\
-	jiorouter,ax6000-jidu6101)
+	cudy,wr3000p-v1)
 		CI_UBIPART="ubi"
 		nand_do_upgrade "$1"
 		;;
@@ -204,7 +173,6 @@ platform_do_upgrade() {
 	yuncore,ax835)
 		default_do_upgrade "$1"
 		;;
-	dlink,aquila-pro-ai-e30-a1|\
 	dlink,aquila-pro-ai-m30-a1|\
 	dlink,aquila-pro-ai-m60-a1)
 		fw_setenv sw_tryactive 0
@@ -229,7 +197,6 @@ platform_do_upgrade() {
 	mercusys,mr85x|\
 	mercusys,mr90x-v1|\
 	tplink,archer-ax80-v1|\
-	tplink,archer-ax80-v1-eu|\
 	tplink,be450|\
 	tplink,re6000xd)
 		CI_UBIPART="ubi0"
@@ -314,33 +281,31 @@ platform_check_image() {
 	bananapi,bpi-r4-2g5|\
 	bananapi,bpi-r4-poe|\
 	bananapi,bpi-r4-lite|\
-	bazis,ax3000wm|\
+	cetron,ct3003-ubootmod|\
 	cmcc,a10-ubootmod|\
 	cmcc,rax3000m|\
+	cmcc,rax3000me|\
 	comfast,cf-wr632ax-ubootmod|\
-	creatlentem,clt-r30b1-ubi|\
 	cudy,tr3000-v1-ubootmod|\
-	cudy,wbr3000uax-v1-ubootmod|\
-	cudy,wr3000e-v1-ubootmod|\
-	cudy,wr3000s-v1-ubootmod|\
-	cudy,wr3000h-v1-ubootmod|\
-	cudy,wr3000p-v1-ubootmod|\
 	gatonetworks,gdsp|\
 	h3c,magic-nx30-pro|\
+	imou,lc-hx3001|\
 	jcg,q30-pro|\
 	jdcloud,re-cp-03|\
 	konka,komi-a31|\
+	livinet,zr-3020-ubootmod|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
 	mercusys,mr90x-v1-ubi|\
 	nokia,ea0326gmp|\
-	netis,eap930-v1|\
-	netis,nx32u|\
 	openwrt,one|\
 	netcore,n60|\
+	netcore,n60-pro|\
 	qihoo,360t7|\
-	qihoo,360t7-ubi|\
 	routerich,ax3000-ubootmod|\
+	tplink,tl-7dr7230-v1|\
+	tplink,tl-7dr7230-v2|\
+	tplink,tl-7dr7250-v1|\
 	tplink,tl-xdr4288|\
 	tplink,tl-xdr6086|\
 	tplink,tl-xdr6088|\
@@ -376,31 +341,16 @@ platform_check_image() {
 
 platform_copy_config() {
 	case "$(board_name)" in
-	bananapi,bpi-r3|\
-	bananapi,bpi-r3-mini|\
-	bananapi,bpi-r4|\
-	bananapi,bpi-r4-2g5|\
-	bananapi,bpi-r4-poe|\
-	bananapi,bpi-r4-lite|\
-	cmcc,rax3000m|\
-	gatonetworks,gdsp|\
-	mediatek,mt7988a-rfb)
-		if [ "$CI_METHOD" = "emmc" ]; then
-			emmc_copy_config
-		fi
-		;;
 	acer,predator-w6|\
 	acer,predator-w6d|\
 	acer,vero-w6m|\
-	airpi,ap3000m|\
 	arcadyan,mozart|\
 	glinet,gl-mt2500|\
-	glinet,gl-mt2500-airoha|\
 	glinet,gl-mt6000|\
 	glinet,gl-x3000|\
 	glinet,gl-xe3000|\
-	huasifei,wh3000|\
-	huasifei,wh3000-pro-emmc|\
+	huasifei,wh3000-emmc|\
+	huasifei,wh3000-pro|\
 	jdcloud,re-cp-03|\
 	nradio,c8-668gl|\
 	smartrg,sdg-8612|\
@@ -410,8 +360,24 @@ platform_copy_config() {
 	smartrg,sdg-8733|\
 	smartrg,sdg-8733a|\
 	smartrg,sdg-8734|\
+	cmcc,rax3000m-emmc|\
+	cmcc,xr30-emmc|\
 	ubnt,unifi-6-plus)
 		emmc_copy_config
+		;;
+	bananapi,bpi-r3|\
+	bananapi,bpi-r3-mini|\
+	bananapi,bpi-r4|\
+	bananapi,bpi-r4-2g5|\
+	bananapi,bpi-r4-poe|\
+	bananapi,bpi-r4-lite|\
+	cmcc,rax3000m|\
+	cmcc,rax3000me|\
+	gatonetworks,gdsp|\
+	mediatek,mt7988a-rfb)
+		if [ "$CI_METHOD" = "emmc" ]; then
+			emmc_copy_config
+		fi
 		;;
 	esac
 }
@@ -421,7 +387,6 @@ platform_pre_upgrade() {
 
 	case "$board" in
 	asus,rt-ax52|\
-	asus,rt-ax57m|\
 	asus,rt-ax59u|\
 	asus,tuf-ax4200|\
 	asus,tuf-ax4200q|\
@@ -431,9 +396,6 @@ platform_pre_upgrade() {
 		;;
 	buffalo,wsr-6000ax8)
 		buffalo_initial_setup
-		;;
-	jiorouter,ax6000-jidu6101)
-		jiorouter_initial_setup
 		;;
 	xiaomi,mi-router-ax3000t|\
 	xiaomi,mi-router-wr30u-stock|\
